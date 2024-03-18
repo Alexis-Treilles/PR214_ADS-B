@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>FlightRadar33</title>
+        <!-- Inclusion du CSS de Leaflet -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+        <!-- Inclusion du fichier CSS externe -->
+        <link rel="stylesheet" href="./style.css" />
+        <!-- Inclusion du SDK Firebase -->
+        <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-database.js"></script>
+    </head>
+<body>
+    <h1>FlightRadar33</h1>
+
+    <!-- La sidebar -->
+    <div id="sidebar">
+        <!-- Contenu de la sidebar -->
+        <h2>Informations de vol</h2>
+        <div id="flight-info-sidebar"></div>
+    </div>
+
+    <!-- Le conteneur de la carte Leaflet -->
+    <div id="map" style="height: 800px;"></div>
+
+    <!-- Inclusion du JavaScript de Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="leaflet.rotatedMarker.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js";
+        
+    
+        // Fermer la sidebar en cliquant sur la carte, en dehors des marqueurs
+        
+        // Configuration de Firebase
+        var firebaseConfig = {
+            apiKey: "AIzaSyBm35l7_I-2Y19OVxxuLKIaysUmqBnhWSI",
+            authDomain: "test-349ac.firebaseapp.com",
+            databaseURL: "https://test-349ac-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "test-349ac",
+            storageBucket: "test-349ac.appspot.com",
+            messagingSenderId: "1082188343275",
+            appId: "1:1082188343275:web:b9466faefd2172d5d45bae"
+        };
+        const app = initializeApp(firebaseConfig);
+        var db = getDatabase();
+
+        // Initialiser la carte Leaflet
+        var map = L.map('map').setView([44.805938, -0.606223], 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Référence à la base de données
+        var the_ref = ref(db, '/');
+
+        // Stocker les marqueurs des avions
+        var airplaneMarkers = {};
+
+        // Écouter les changements en temps réel
+        onValue(the_ref, (snapshot) => {
+            // Supprimer les anciens marqueurs
+            for (let key in airplaneMarkers) {
+                map.removeLayer(airplaneMarkers[key]);
+            }
+            airplaneMarkers = {};
+    
+            // Récupérer et afficher les données
+            var icao_list = [];
+            var path_table = [];
+            const allFlightData = snapshot.val();
+            for (const key in allFlightData) {
+                if (allFlightData.hasOwnProperty(key)) {
+                    const flightData = allFlightData[key];
+                    // Remplir la liste des ICAO et des chemins correspondants de chaque avion
+                    if (!icao_list.includes(flightData.icao)){
+                        icao_list.push(flightData.icao);
+                        path_table.push([]);
+                    }
+                    path_table[icao_list.indexOf(flightData.icao)].push([flightData.latitude, flightData.longitude, flightData.timestamp]);
+                    
+                    if (flightData && flightData.latitude && flightData.longitude) {
+                        // Calculer l'angle de rotation basé sur la position actuelle et la position précédente
+                        var angle = flightData.heading;
+                        var airplaneIcon = L.divIcon({
+                            className: 'avion-container',
+                            html: '<img src="icons8-plane-30.png" class="avion-img" style="transform: rotate(' + angle + 'deg);">',
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
+                        });
+    
+                        var marker = L.marker([flightData.latitude, flightData.longitude], {icon: airplaneIcon}).addTo(map);
+                        // Gestionnaire d'événements pour afficher les informations du vol lors du clic sur le marqueur
+                        marker.on('click', function(e) {
+                            // Mettre à jour le contenu de la sidebar avec les informations du vol
+                            document.getElementById('flight-info-sidebar').innerHTML = `
+                                <p>Aircraft_type: ${flightData.aircraft_type}s</p>
+                                <p>Vitesse: ${flightData.velocity}</p>
+                                <p>Cap: ${flightData.heading}°</p>
+                                <p>Latitude: ${flightData.latitude}</p>
+                                <p>Longitude: ${flightData.longitude}</p>
+                                <p>ICAO: ${flightData.icao}</p>
+                                <p>Timestamp: ${flightData.timestamp}s</p>
+                            `;
+                            
+                            // Afficher la sidebar
+                            document.getElementById('sidebar').style.display = 'block';
+                        });
+
+                        // Mise à jour des positions pour le prochain calcul
+                        airplaneMarkers[key] = marker;
+                    }
+                }
+            }
+
+            // Initialiser un objet pour stocker les données triées
+            var sortedPathData = {};
+
+            // Remplir sortedPathData avec les tableaux de positions triés pour chaque ICAO
+            for (let i = 0; i < icao_list.length; i++) {
+                // Trier le tableau de positions par timestamp dans l'ordre décroissant
+                path_table[i].sort((a, b) => b[2] - a[2]);
+                // Stocker le tableau trié dans sortedPathData avec la clé ICAO correspondante
+                sortedPathData[icao_list[i]] = path_table[i];
+            }
+
+            // Utilisez sortedPathData pour accéder aux tableaux de positions triés
+            console.table(sortedPathData);
+        });
+    </script>
+</body>
+</html>
