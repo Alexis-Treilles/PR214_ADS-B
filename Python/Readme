@@ -1,0 +1,2 @@
+Main.py take the binary messages on a .csv file 
+function.py contains all the useful fonctions to process the message and upload it on the database.
