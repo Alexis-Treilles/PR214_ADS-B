@@ -1,0 +1,51 @@
+body, html {
+  height: 100%;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  display: flex;
+  height: 100%;
+}
+
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+  width: 20%;
+}
+
+header {
+  background-color: #213f5f;
+  color: white;
+  padding: 10px;
+  text-align: center;
+}
+
+#sidebar {
+  background-color: #f0f0f0;
+  padding: 20px;
+  overflow-y: auto;
+}
+#sidebar img {
+  width: 100%;
+  height: auto;
+}
+#map {
+  flex-grow: 1;
+  height: 100vh; /* Ajustez selon les besoins */
+}
+
+@media (max-width: 768px) {
+  .container {
+      flex-direction: column;
+  }
+
+  .sidebar-container {
+      width: 100%; /* La sidebar prend toute la largeur en mode responsive */
+  }
+
+  #map {
+      height: calc(100vh - 250px); /* Ajustez la hauteur de la map lorsque la sidebar est au-dessus */
+  }
+}
