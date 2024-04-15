@@ -91,7 +91,7 @@ function createAirportIcon() {
 
 async function loadAirportData() {
     try {
-        const response = await fetch('european_airports.json');
+        const response = await fetch('json/european_airports.json');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
