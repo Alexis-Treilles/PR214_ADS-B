@@ -3,7 +3,7 @@ import datetime
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
-cred = credentials.Certificate('PR214/cred.json') 
+cred = credentials.Certificate('cred.json') 
 import socket
 import struct
 import time
@@ -231,8 +231,8 @@ def analyse_trames_progress(trames_hexa, echs):
     icao_uniques = set()
     
     # Calcul des timestamps à partir de echs
-    timestamps = [ech / 4000000 for ech in echs]
-    
+    #timestamps = [ech / 4000000 for ech in echs]
+    timestamps=echs
     for index, hex_string in enumerate(trames_hexa):
         current_timestamp = timestamps[index]
         
@@ -272,3 +272,16 @@ def analyse_trames_progress(trames_hexa, echs):
         bar = '[' + '#' * progress_chars + ' ' * (bar_length - progress_chars) + ']'
         print(f"\rProgression : {bar} {progress:.2f}% Temps écoulé : {elapsed_time:.2f} secondes", end='', flush=True)
 
+def supprimer_points_avions():
+    existing_data = ref.get()
+    if existing_data:
+        points_supprimes = 0
+        for key, value in existing_data.items():
+            if 'timestamp' in value:
+                timestamp = value['timestamp']
+                current_time = int(time.time())
+                if current_time - timestamp > 300:  # 5 minutes en secondes
+                    ref.child(key).delete()
+                    points_supprimes += 1
+                    print(f"Point d'avion supprimé pour la clé {key}")
+        print(f"Total des points d'avions supprimés : {points_supprimes}")

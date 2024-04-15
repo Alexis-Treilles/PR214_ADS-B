@@ -36,6 +36,7 @@ def main():
 
             hex_string = raw_data.decode('utf-8').strip()
             if len(hex_string) == 30:
+                print("trames push",crc_pass_count)
                 cleaned_hex_string = hex_string.lstrip('*').rstrip(';')
                 df = pms.df(cleaned_hex_string)
                 if df in [17, 18]:  # Trames de type ADS-B

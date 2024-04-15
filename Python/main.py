@@ -6,13 +6,13 @@ def main():
     delete_database()
     while True:
         # Lire et traiter le premier fichier CSV
-        hex_strings = lire_colonne_csv("log_prof.csv", "Hexadecimal")
-        echs = lire_colonne_csv("log_prof.csv", "ech")
+        hex_strings = lire_colonne_csv("PR214/CSV/log_prof.csv", "Hexadecimal")
+        echs = lire_colonne_csv("PR214/CSV/log_prof.csv", "ech")
         analyse_trames_progress(hex_strings, echs)
 
         # Lire et traiter le deuxième fichier CSV
-        hex_strings = lire_colonne_csv("frames (1).csv", "Hexadecimal")
-        echs = lire_colonne_csv("frames (1).csv", "Temps")
+        #hex_strings = lire_colonne_csv("frames (1).csv", "Hexadecimal")
+        #echs = lire_colonne_csv("frames (1).csv", "Temps")
         #analyse_trames_progress(hex_strings, echs)
 
         # Supprimer la base de données une fois que tous les fichiers ont été lus
