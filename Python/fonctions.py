@@ -53,8 +53,29 @@ def send_data(info):  # envoie des données sur la base de donnée et tri des do
     icao = info['icao']
     latitude = info['latitude']
     longitude = info['longitude']
-
     if existing_data:
+        current_time = int(time.time())
+        icao_to_delete = []
+        last_timestamps = {}
+        for key, value in existing_data.items():
+            if 'icao' in value and 'timestamp' in value:
+                icao = value['icao']
+                timestamp = value['timestamp']
+
+                if icao not in last_timestamps or timestamp > last_timestamps[icao]:
+                    last_timestamps[icao] = timestamp
+
+        for icao, timestamp in last_timestamps.items():
+            if current_time - timestamp > 300:
+                icao_to_delete.append(icao)
+
+        points_supprimes = 0
+        for key, value in existing_data.items():
+            if value['icao'] in icao_to_delete:
+                ref.child(key).delete()
+                points_supprimes += 1
+
+        print(f"Total des points d'avions supprimés : {points_supprimes}")
         data_to_delete = []
         for key, value in existing_data.items():
             # Vérification de l'existence de 'icao', 'latitude', et 'longitude' avant de continuer
@@ -231,8 +252,9 @@ def analyse_trames_progress(trames_hexa, echs):
     icao_uniques = set()
     
     # Calcul des timestamps à partir de echs
-    #timestamps = [ech / 4000000 for ech in echs]
-    timestamps=echs
+    temps=get_ntp_time()
+    timestamps = [ech / 4000000+temps for ech in echs]
+    #timestamps=echs
     for index, hex_string in enumerate(trames_hexa):
         current_timestamp = timestamps[index]
         
@@ -256,13 +278,15 @@ def analyse_trames_progress(trames_hexa, echs):
                 if icao_id not in icao_uniques:
                     icao_uniques.add(icao_id)
                 send_data(info)
+                
+
         
         trames_traitees += 1
         if index < total_trames - 1:
             # Calcul de la différence de temps entre la trame actuelle et la suivante
             next_timestamp = timestamps[index + 1]
             delay = next_timestamp - current_timestamp
-            #time.sleep(delay)  # Attente du délai avant de traiter la trame suivante
+            time.sleep(delay)  # Attente du délai avant de traiter la trame suivante
         
         # Mise à jour de la barre de progression
         progress = (trames_traitees / total_trames) * 100
@@ -271,17 +295,3 @@ def analyse_trames_progress(trames_hexa, echs):
         progress_chars = int(bar_length * (progress / 100))
         bar = '[' + '#' * progress_chars + ' ' * (bar_length - progress_chars) + ']'
         print(f"\rProgression : {bar} {progress:.2f}% Temps écoulé : {elapsed_time:.2f} secondes", end='', flush=True)
-
-def supprimer_points_avions():
-    existing_data = ref.get()
-    if existing_data:
-        points_supprimes = 0
-        for key, value in existing_data.items():
-            if 'timestamp' in value:
-                timestamp = value['timestamp']
-                current_time = int(time.time())
-                if current_time - timestamp > 300:  # 5 minutes en secondes
-                    ref.child(key).delete()
-                    points_supprimes += 1
-                    print(f"Point d'avion supprimé pour la clé {key}")
-        print(f"Total des points d'avions supprimés : {points_supprimes}")

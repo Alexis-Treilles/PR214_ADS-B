@@ -6,8 +6,8 @@ def main():
     delete_database()
     while True:
         # Lire et traiter le premier fichier CSV
-        hex_strings = lire_colonne_csv("PR214/CSV/log_prof.csv", "Hexadecimal")
-        echs = lire_colonne_csv("PR214/CSV/log_prof.csv", "ech")
+        hex_strings = lire_colonne_csv("CSV/log_prof.csv", "Hexadecimal")
+        echs = lire_colonne_csv("CSV/log_prof.csv", "ech")
         analyse_trames_progress(hex_strings, echs)
 
         # Lire et traiter le deuxième fichier CSV
@@ -17,7 +17,6 @@ def main():
 
         # Supprimer la base de données une fois que tous les fichiers ont été lus
         delete_database()
-
         # Pause de 5 secondes avant de recommencer la boucle
         time.sleep(5)
 

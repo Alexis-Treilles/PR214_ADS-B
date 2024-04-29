@@ -36,9 +36,10 @@ def main():
 
             hex_string = raw_data.decode('utf-8').strip()
             if len(hex_string) == 30:
-                print("trames push",crc_pass_count)
+                
                 cleaned_hex_string = hex_string.lstrip('*').rstrip(';')
                 df = pms.df(cleaned_hex_string)
+                print("trames push :",crc_pass_count,"DF :",df)
                 if df in [17, 18]:  # Trames de type ADS-B
                     crc_pass_count += 1  # Incrémenter le compteur de CRC réussis
                     current_timestamp = time.time()
