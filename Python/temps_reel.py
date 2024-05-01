@@ -1,7 +1,7 @@
 import socket
 import time
 import csv
-from fonctions import decode_adsb, send_data, delete_database
+from fonctions import decode_adsb, send_data
 import pyModeS as pms
 
 def main():

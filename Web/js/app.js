@@ -156,7 +156,7 @@ async function loadAirportData() {
 
 
 // Fonction pour mettre à jour le tracé de la trajectoire en temps réel
-function updatePathOnDataChange(selectedMarker, selectedPath, icao, path_table) {
+function updatePathOnDataChange(selectedMarker, selectedPath, icao, path_table,map) {
     const latestPathData = path_table[icao][0];
     const pathCoordinates = path_table[icao].map(point => [point.latitude, point.longitude]);
 
@@ -168,7 +168,8 @@ function updatePathOnDataChange(selectedMarker, selectedPath, icao, path_table) 
         }
         
         // Mettre à jour le chemin associé avec les nouvelles données
-        selectedPath = L.polyline(pathCoordinates, { color: 'red' }).addTo(map);
+        const color = getColorForVelocity(latestPathData.velocity);
+        selectedPath = L.polyline(pathCoordinates, { color }).addTo(map);
     }
 }
 
@@ -182,7 +183,7 @@ function listenForChangesAndUpdatePath(db, map) {
 
         // Mettre à jour le tracé de la trajectoire si le marqueur sélectionné existe
         if (selectedMarker) {
-            updatePathOnDataChange(selectedMarker, selectedPath, selectedMarker.options.icao, path_table);
+            updatePathOnDataChange(selectedMarker, selectedPath, selectedMarker.options.icao, path_table,map);
         }
 
         // Appeler la fonction pour afficher les positions les plus récentes des avions sur la carte
@@ -231,10 +232,10 @@ function displayLatestPositions(map, icao_list, path_table) {
     for (const icao of icao_list) {
         const flightData = path_table[icao][0];
         const angle = calculateAngle(path_table[icao]);
+        const color = getColorForVelocity(flightData.velocity);
+        const airplaneIcon = createAirplaneIcon(angle,color);
 
-        const airplaneIcon = createAirplaneIcon(angle);
-
-        const marker = L.marker([flightData.latitude, flightData.longitude], {icon: airplaneIcon, icao: icao});
+        const marker = L.marker([flightData.latitude, flightData.longitude], {icon: airplaneIcon, icao: icao}).addTo(map);
 
         addMarkerClickListener(map, marker, icao, flightData, path_table);
 
@@ -268,11 +269,11 @@ function calculateAngle(pathData) {
     return angle;
 }
 
-// Fonction pour créer l'icône d'avion
-function createAirplaneIcon(angle) {
+// Fonction pour créer l'icône d'avion avec une couleur spécifiée
+function createAirplaneIcon(angle,color) {
     return L.divIcon({
         className: 'avion-container',
-        html: `<img src="./img/icons8-plane-30.png" class="avion-img" style="transform: rotate(${angle}deg);">`,
+        html: `<img src="./img/icons8-plane-30.png" class="avion-img" style="transform: rotate(${angle}deg);filter: drop-shadow(2px 4px 6px ${color});">`,
         iconSize: [30, 30],
         iconAnchor: [15, 15]
     });
@@ -285,7 +286,9 @@ function addMarkerClickListener(map, marker, icao, flightData, path_table) {
         removePolylines(map);
 
         const pathCoordinates = path_table[icao].map(point => [point.latitude, point.longitude]);
-        const currentPath = L.polyline(pathCoordinates, { color: 'red' });
+        const color = getColorForVelocity(flightData.velocity); // Obtenir la couleur en fonction de la vitesse
+        const currentPath = L.polyline(pathCoordinates, { color }).addTo(map); // Utiliser la même couleur que l'avion
+        
         planesLayerGroup.addLayer(currentPath);
 
         selectedMarker = marker;
@@ -336,7 +339,7 @@ listenForChangesAndUpdatePath(db, map);
 map.on('click', function() {
     closeSidebar();
     removePolylines(map);
-});
+})
 
 // Gestionnaire pour la touche Échap
 document.onkeydown = function(evt) {
@@ -346,4 +349,21 @@ document.onkeydown = function(evt) {
         removePolylines(map);
     }
 };
-
+function getColorForVelocity(velocity) {
+    const Mach = 1224  ; // Unité pour la vitesse du son
+   if (velocity <= 0.15*Mach) {
+       return 'blue';
+   } else if (velocity <=  0.30*Mach) {
+       return 'purple';
+   } else if (velocity <=  0.45*Mach) {
+       return 'yellow';
+   } else if (velocity <=  0.60*Mach) {
+       return 'orange';
+   } else if (velocity <=  0.75*Mach) {
+       return 'red';
+   } else if (velocity <= 0.90*Mach) {
+       return '#8B008B'; // Rouge violet
+   }else if (velocity <= 6.70*Mach) {
+       return 'black';
+   }
+}
