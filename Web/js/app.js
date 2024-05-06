@@ -90,6 +90,7 @@ function updateSidebar(type, content) {
 function closeSidebar() {
     const sidebar = document.getElementById('sidebar');
     sidebar.style.display = 'none';
+    document.getElementById('header').style.display = 'none';
     const flightSidebar = document.getElementById('flight-info-sidebar');
     const airportSidebar = document.getElementById('airport-info-sidebar');
     flightSidebar.innerHTML = ''; // Efface le contenu de la barre latérale des informations de vol
@@ -304,6 +305,7 @@ function addMarkerClickListener(map, marker, icao, flightData, path_table) {
         updateSidebarFlight(flightData);
 
         document.getElementById('sidebar').style.display = 'block';
+        document.getElementById('header').style.display = 'block';
     });
 }
 
