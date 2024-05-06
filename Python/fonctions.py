@@ -3,7 +3,7 @@ import datetime
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
-cred = credentials.Certificate('cred.json') 
+cred = credentials.Certificate('Python/cred.json') 
 import socket
 import struct
 import time
@@ -60,16 +60,8 @@ def send_data(info):  # envoie des données sur la base de donnée ( Firebase)
                 existing_timestamp = value['timestamp']
                 
                 
-                if icao == existing_icao and latitude == existing_latitude and longitude == existing_longitude:
+                #if icao == existing_icao and latitude == existing_latitude and longitude == existing_longitude:
                    
-                    if new_data_timestamp - existing_timestamp > 600: 
-                        data_to_delete.append(key)
-                    
-                  
-                
-        # Supprimer les données obsolètes
-        for key in data_to_delete:
-            ref.child(key).delete()
     supprimer_points_avions()
 
     
@@ -169,10 +161,10 @@ def analyse_trames_progress(trames_hexa, echs):
     informations_par_icao = {}
     icao_uniques = set()
     
-    #timestamps = [ech / 4000000 for ech in echs]
-    timestamps=echs
+    timestamps = [ech / 4000000 for ech in echs]
+    #timestamps=echs
     for index, hex_string in enumerate(trames_hexa):
-        current_timestamp = timestamps[index]+get_ntp_time()
+        current_timestamp = (timestamps[index]/2+time.time())
         
         decoded_info = decode_adsb(hex_string, informations_par_icao, current_timestamp)
         
@@ -197,10 +189,10 @@ def analyse_trames_progress(trames_hexa, echs):
         trames_traitees += 1
         if index < total_trames - 1:
             # Calcul de la différence de temps entre la trame actuelle et la suivante
-            next_timestamp = timestamps[index + 1]
+            next_timestamp = (timestamps[index + 1]/2+time.time())
             delay = next_timestamp - current_timestamp
-          
-        
+        print(delay)
+        time.sleep(abs(delay))
         # Mise à jour de la barre de progression
         progress = (trames_traitees / total_trames) * 100
         elapsed_time = time.time() - start_time
@@ -217,7 +209,7 @@ def supprimer_points_avions():
             if 'timestamp' in value:
                 timestamp = value['timestamp']
                 current_time = int(time.time())
-                if current_time - timestamp > 300:  # 5 minutes en secondes
+                if current_time - timestamp > 100:  # 5 minutes en secondes
                     ref.child(key).delete()
                     points_supprimes += 1
                     print(f"Point d'avion supprimé pour la clé {key}")

@@ -6,7 +6,7 @@ from firebase_admin import db
 cred_path = 'cred.json'
 
 # Initialiser l'application Firebase avec vos credentials et l'URL de votre base de données
-cred = credentials.Certificate('PR214/cred.json')
+cred = credentials.Certificate('Python/cred.json')
 firebase_admin.initialize_app(cred,{'databaseURL' : 'https://test-349ac-default-rtdb.europe-west1.firebasedatabase.app/'})
 ref = db.reference('/')
 

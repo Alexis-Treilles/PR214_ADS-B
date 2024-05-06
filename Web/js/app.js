@@ -226,12 +226,17 @@ function processFlightData(allFlightData) {
 }
 
 // Fonction pour afficher les positions les plus récentes des avions sur la carte
+// Déclarer un objet pour stocker les angles précédents de chaque avion
+const anglesPrecedents = {};
+
 function displayLatestPositions(map, icao_list, path_table) {
     planesLayerGroup.clearLayers(); // Supprime tous les marqueurs d'avions précédents
 
     for (const icao of icao_list) {
         const flightData = path_table[icao][0];
-        const angle = calculateAngle(path_table[icao]);
+        const anglePrecedent = anglesPrecedents[icao]; // Obtenir l'angle précédent de cet avion
+        const angle = calculateAngle(path_table[icao], anglePrecedent); // Passer l'angle précédent à la fonction calculateAngle
+        anglesPrecedents[icao] = angle; // Stocker l'angle actuel comme l'angle précédent pour la prochaine itération
         const color = getColorForVelocity(flightData.velocity);
         const airplaneIcon = createAirplaneIcon(angle,color);
 
@@ -243,10 +248,8 @@ function displayLatestPositions(map, icao_list, path_table) {
     }
 }
 
-
-
 // Fonction pour calculer l'angle de rotation de l'avion
-function calculateAngle(pathData) {
+function calculateAngle(pathData, anglePrecedent) {
     let angle = 0;
 
     if (pathData.length > 1) {
@@ -263,11 +266,15 @@ function calculateAngle(pathData) {
         if (angle < 0) {
             angle += 360;
         }
+        if (angle == 180) {
+            angle = anglePrecedent; // Utiliser l'angle précédent si l'angle calculé est égal à 180
+        }
         angle = Number(angle.toFixed(0));
     }
-
+    
     return angle;
 }
+
 
 // Fonction pour créer l'icône d'avion avec une couleur spécifiée
 function createAirplaneIcon(angle,color) {
