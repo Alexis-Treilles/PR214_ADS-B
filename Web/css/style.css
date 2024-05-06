@@ -32,6 +32,7 @@ header {
   height: auto;
 }
 #map {
+  width: 700%;
   flex-grow: 1;
   height: 100vh; /* Ajustez selon les besoins */
 }
